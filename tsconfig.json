@@ -8,6 +8,6 @@
     "outDir": "dist"
   },
   "files": [
-    "json-to-yaml.ts"
+    "json-to-yaml/index.ts"
   ]
 }
