@@ -2,7 +2,7 @@ type jsonStuff = {
   [key: string]: any;
 };
 
-export const getKeyProperties = (possibleObject: jsonStuff) => {
+export const getObjectProperties = (possibleObject: jsonStuff) => {
   if (typeof possibleObject !== "object" || possibleObject === null) {
     return false;
   }
@@ -10,35 +10,52 @@ export const getKeyProperties = (possibleObject: jsonStuff) => {
   return Object.getOwnPropertyNames(possibleObject);
 };
 
-const leader = (key: string, offset: number): string => {
-  const indent = createOffset(offset);
+const objectPropertyName = (key: string, offset: number): string => {
+  const indent = prefixIndentLength(offset);
   return `${indent}${key}:\n`;
 };
 
-const createOffset = (offset: number) => {
-  return new Array(offset)
-    .fill(1)
-    .map(() => "  ")
-    .join("");
+const prefixIndentLength = (offset: number) => {
+  let indent = "";
+
+  for (let i = 0; i < offset; i++) {
+    indent += "  ";
+  }
+
+  return indent;
 };
 
 const yamlOutput = (
   object: jsonStuff,
   key: string,
   offset = 0,
-  arrayValue = false
+  arrayItem = false
 ): string => {
-  const arrayDash = arrayValue ? "- " : "";
+  // check if value is an object
+  if (!getObjectProperties(object[key])) {
+    let indent = "";
+    let extension = "";
+    let arrayItemDash = "";
 
-  if (!getKeyProperties(object[key])) {
-    let tabs = "";
+    // do not indent root properties
     if (offset !== 0) {
-      tabs = createOffset(offset);
+      indent = prefixIndentLength(offset);
     }
 
-    const extension = arrayValue ? "" : `: ${object[key]}`;
+    // add dash prefix to array items
+    if (arrayItem) {
+      arrayItemDash = "- ";
+    }
 
-    return `${tabs}${arrayDash}${key}${extension}`;
+    // add the object value if this is not an array item
+    // array item keys or values will not have a property
+    // on the same line. items that are also arrays or objects
+    // will start listing these on the next line
+    if (!arrayItem) {
+      extension = `: ${object[key]}`;
+    }
+
+    return `${indent}${arrayItemDash}${key}${extension}`;
   }
 
   if (Array.isArray(object[key])) {
@@ -46,7 +63,7 @@ const yamlOutput = (
       .map((key: any) => yamlOutput(object, key, offset, true))
       .join("\n");
 
-    return leader(key, offset) + arrayValue;
+    return objectPropertyName(key, offset) + arrayValue;
   }
 
   if (typeof object[key] === "object") {
@@ -59,8 +76,10 @@ const yamlOutput = (
       })
       .join("\n");
 
-    return leader(key, offset) + objectValue;
+    return objectPropertyName(key, offset) + objectValue;
   }
+
+  throw new Error(`Mr programmer sir. You didn't handle this ${object[key]}`);
 };
 
 const jsonToYaml = (jsonData: string) => {
@@ -69,8 +88,11 @@ const jsonToYaml = (jsonData: string) => {
   } catch (e) {
     throw new Error("Supplied data is not of type json. Or is malformed json");
   }
-  let parsedJson = JSON.parse(jsonData);
+
+  const parsedJson = JSON.parse(jsonData);
+
   const keys: string[] = Object.getOwnPropertyNames(parsedJson);
+
   return keys.map((key) => yamlOutput(parsedJson, key)).join("\n");
 };
 

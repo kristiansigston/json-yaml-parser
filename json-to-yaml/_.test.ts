@@ -10,7 +10,7 @@ import {
   jsonPropertyNull,
   yamlPropertyNull,
 } from "../test_data";
-import jsonToYaml, { getKeyProperties } from "./";
+import jsonToYaml, { getObjectProperties } from "./";
 
 describe("convert the json data to yaml", () => {
   it("should convert 1 key value pair correctl;y", () => {
@@ -42,7 +42,7 @@ describe("Errors", () => {
 
 describe("Get all current root key values ", () => {
   it("should return the key properties", () => {
-    expect(getKeyProperties({ yo: "lo", propThings: "hah ah a" })).toEqual([
+    expect(getObjectProperties({ yo: "lo", propThings: "hah ah a" })).toEqual([
       "yo",
       "propThings",
     ]);
